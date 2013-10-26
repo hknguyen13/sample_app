@@ -23,6 +23,12 @@ describe "Authentication" do
         before { click_link "Home" }
         it { should_not have_selector('div.alert.alert-error') }
       end
+      
+      describe "links not in header content" do
+        it {should_not have_link('Profile')}
+        it {should_not have_link('Settings')}
+        it {should_not have_link('Sign out')}
+      end
     end
     
     describe "with valid information" do
@@ -60,6 +66,33 @@ describe "Authentication" do
 
           it "should render the desired protected page" do
             expect(page).to have_title('Edit user')
+          end
+          
+          describe "when signing in again" do
+            before do
+              delete signout_path
+              visit signin_path
+              fill_in "Email",    with: user.email
+              fill_in "Password", with: user.password
+              click_button "Sign in"
+            end
+
+            it "should render the default (profile) page" do
+              expect(page).to have_title(user.name)
+            end
+          end
+        end
+        
+        describe "in the Microposts controller" do
+  
+          describe "submitting to the create action" do
+            before { post microposts_path }
+            specify { expect(response).to redirect_to(signin_path) }
+          end
+  
+          describe "submitting to the destroy action" do
+            before { delete micropost_path(FactoryGirl.create(:micropost)) }
+            specify { expect(response).to redirect_to(signin_path) }
           end
         end
       end
